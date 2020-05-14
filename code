@@ -1,0 +1,127 @@
+/********/
+// First we include the libraries
+#include <OneWire.h> 
+#include <DallasTemperature.h>
+/********/
+// Data wire is plugged into pin 2 on the Arduino 
+#define ONE_WIRE_BUS 16
+int pinH=18,pinL=19;
+ int threshold = 50;
+int temp;
+int tempPin = A2,buzzer=17;
+int x,y;
+int bcd_array[10][7] = {  { 0,0,0,0,0,0,1 },    // 0          
+                          { 1,0,0,1,1,1,1 },    // 1
+                          { 0,0,1,0,0,1,0 },    // 2
+                          { 0,0,0,0,1,1,0 },    // 3
+                          { 1,0,0,1,1,0,0 },    // 4
+                          { 0,1,0,0,1,0,0 },    // 5
+                          { 0,1,0,0,0,0,0 },    // 6
+                          { 0,0,0,1,1,1,1 },    // 7
+                          { 0,0,0,0,0,0,0 },    // 8
+                          { 0,0,0,1,1,0,0 }};   // 9                                       
+void BCD0(int);
+void BCD1(int);
+void BCD0(int number) 
+{
+  int pin= 2;
+  for (int j=0; j < 7; j++) {
+   digitalWrite(pin, bcd_array[number][j]);
+   pin++;
+  }
+  }
+  void BCD1(int number) 
+{
+  int pin= 9;
+  for (int j=0; j < 7; j++) {
+   digitalWrite(pin, bcd_array[number][j]);
+   pin++;
+  }
+}
+/********/
+// Setup a oneWire instance to communicate with any OneWire devices  
+// (not just Maxim/Dallas temperature ICs) 
+OneWire oneWire(ONE_WIRE_BUS); 
+/********/
+// Pass our oneWire reference to Dallas Temperature. 
+DallasTemperature sensors(&oneWire);
+/********/ 
+void setup(void) 
+{ 
+ // start serial port 
+ Serial.begin(9600);
+ pinMode(2, OUTPUT);   
+  pinMode(3, OUTPUT);
+  pinMode(4, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(6, OUTPUT);
+  pinMode(7, OUTPUT);
+  pinMode(8, OUTPUT);
+  pinMode(A2, INPUT);  
+  pinMode(9, OUTPUT);   
+  pinMode(10, OUTPUT);
+  pinMode(11, OUTPUT);
+  pinMode(12, OUTPUT);
+  pinMode(13, OUTPUT);
+  pinMode(14, OUTPUT);
+  pinMode(15, OUTPUT); 
+  pinMode(17,OUTPUT);
+  pinMode(18,INPUT);
+  pinMode(19,INPUT);
+ Serial.println("Dallas Temperature IC Control Library Demo"); 
+ // Start up the library 
+ sensors.begin(); 
+} 
+void loop(void) 
+{ 
+  int i;
+  int che1,che2;
+  for (i=2;i<16;i++){
+   digitalWrite(i,HIGH);
+    }
+    digitalWrite(17,LOW);
+ // call sensors.requestTemperatures() to issue a global temperature 
+ // request to all devices on the bus 
+/********/
+ Serial.print(" Requesting temperatures..."); 
+ sensors.requestTemperatures(); // Send the command to get temperature readings 
+ Serial.println("DONE");
+ che1=digitalRead(pinH); 
+  che2=digitalRead(pinL);
+  if(che1==1 || che2==1){
+    che1=0;che2=0;
+    while(1){
+    che1=digitalRead(pinH); 
+  che2=digitalRead(pinL);
+  if (che1 && che2){break;
+  che1=0;che2=0;
+  }
+  if (che1){
+    threshold+=10;
+      Serial.println(threshold);
+      che1=0;che2=0; 
+    }
+  if (che2){
+    threshold-=10;
+      Serial.println(threshold);
+      che1=0;che2=0; 
+    }
+    che1=0;che2=0;
+    delay(1000);
+  }
+    }
+/********/
+ temp=(int)sensors.getTempCByIndex(0);
+ BCD0(temp/10);
+ BCD1(temp%10);
+ if(temp>=threshold){
+  digitalWrite(17,HIGH);
+  }
+  Serial.print(threshold); 
+ 
+ Serial.print("Temperature is: "); 
+ Serial.print(sensors.getTempCByIndex(0)); // Why "byIndex"?  
+   // You can have more than one DS18B20 on the same bus.  
+   // 0 refers to the first IC on the wire 
+   delay(2000); 
+}
